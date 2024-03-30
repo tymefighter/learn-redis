@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface FacetedSearchService {
-  public void insert(List<JsonNode> events);
+  public void insert(List<JsonNode> records);
 
   public List<JsonNode> get(Map<String, String> filter);
 }

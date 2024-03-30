@@ -31,7 +31,7 @@ public class FullScanSearchService implements FacetedSearchService {
     try(Jedis jedis = jedisPool.getResource()) {
       records.forEach(
           record -> {
-            String redisKey = SearchUtils.getRedisKey(record, config.entityName(), config.idAttribute());
+            String redisKey = SearchUtils.getRedisKey(config.entityName(), config.idAttribute(), record);
             String jsonValue = record.toString();
 
             jedis.set(redisKey, jsonValue);

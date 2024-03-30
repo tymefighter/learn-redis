@@ -9,6 +9,10 @@ import com.tymefighter.facetedSearchApp.search.FacetedSearchService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.params.ScanParams;
+import redis.clients.jedis.resps.ScanResult;
 
 import java.util.*;
 
@@ -16,14 +20,38 @@ import java.util.*;
 @Order(0)
 public class FacetedSearchAppCLIRunner implements CommandLineRunner {
 
+  private final JedisPool jedisPool;
+
   private final FacetedSearchService facetedSearchService;
 
-  public FacetedSearchAppCLIRunner(FacetedSearchService facetedSearchService) {
+  public FacetedSearchAppCLIRunner(JedisPool jedisPool, FacetedSearchService facetedSearchService) {
+    this.jedisPool = jedisPool;
     this.facetedSearchService = facetedSearchService;
   }
 
-  @Override
-  public void run(String... args) {
+  private void clearRedisData() {
+    try(Jedis jedis = jedisPool.getResource()) {
+      String redisKeyPattern = String.format(
+          "%s:*",
+          AppConstants.FACETED_SEARCH_ENTITY_NAME
+      );
+
+      String cursor = ScanParams.SCAN_POINTER_START;
+      ScanParams scanParams = new ScanParams()
+          .match(redisKeyPattern);
+
+      do {
+        ScanResult<String> scanResult = jedis.scan(cursor, scanParams);
+
+        List<String> keys = scanResult.getResult();
+        keys.forEach(jedis::del);
+
+        cursor = scanResult.getCursor();
+      } while(!cursor.equals(ScanParams.SCAN_POINTER_START));
+    }
+  }
+
+  private void insertEvents() {
     ObjectMapper objectMapper = new ObjectMapper();
 
     Event[] events = Events.getEvents();
@@ -33,6 +61,13 @@ public class FacetedSearchAppCLIRunner implements CommandLineRunner {
         .toList();
 
     facetedSearchService.insert(eventRecords);
+  }
+
+  @Override
+  public void run(String... args) {
+    clearRedisData();
+
+    insertEvents();
 
     Scanner scanner = new Scanner(System.in);
 

@@ -1,16 +1,23 @@
 package com.tymefighter.facetedSearchApp;
 
 import com.tymefighter.facetedSearchApp.search.fullScanSearchService.FullScanSearchServiceConfig;
+import com.tymefighter.facetedSearchApp.search.setIntersectionSearchService.SetIntersectionSearchServiceConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Configuration
 public class AppConfig {
+  // Jedis pool parameters
   private static int MAX_NUM_JEDIS_INSTANCES = 64;
   private static String JEDIS_HOST = "localhost";
   private static int JEDIS_PORT = 6379;
+
+  private static String FACETED_SEARCH_ENTITY_ID_ATTRIBUTE = "id";
 
   @Bean
   public JedisPool getJedisPool() {
@@ -26,6 +33,20 @@ public class AppConfig {
 
   @Bean
   public FullScanSearchServiceConfig getFullScanSearchServiceConfig() {
-    return new FullScanSearchServiceConfig("international_event", "id");
+    return new FullScanSearchServiceConfig(AppConstants.FACETED_SEARCH_ENTITY_NAME,
+        FACETED_SEARCH_ENTITY_ID_ATTRIBUTE);
+  }
+
+  @Bean
+  public SetIntersectionSearchServiceConfig getSetIntersectionSearchServiceConfig() {
+    Set<String> lookupAttributes = new HashSet<>();
+    lookupAttributes.add("type");
+    lookupAttributes.add("country");
+    lookupAttributes.add("year");
+
+    return new SetIntersectionSearchServiceConfig(
+        AppConstants.FACETED_SEARCH_ENTITY_NAME,
+        FACETED_SEARCH_ENTITY_ID_ATTRIBUTE,
+        lookupAttributes);
   }
 }
