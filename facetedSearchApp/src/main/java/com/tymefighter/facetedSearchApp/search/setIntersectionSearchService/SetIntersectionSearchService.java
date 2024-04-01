@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tymefighter.facetedSearchApp.search.FacetedSearchService;
 import com.tymefighter.facetedSearchApp.search.SearchUtils;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
@@ -16,7 +15,6 @@ import java.util.Map;
 import java.util.Set;
 
 @Service
-@Primary
 public class SetIntersectionSearchService implements FacetedSearchService {
 
   private final JedisPool jedisPool;
@@ -55,7 +53,7 @@ public class SetIntersectionSearchService implements FacetedSearchService {
   @Override
   public List<JsonNode> get(Map<String, String> filter) {
     if(!validateFilter(filter)) {
-      System.out.println("Invalid filter provided");
+      System.err.println("Invalid filter provided");
       return null;
     }
 
